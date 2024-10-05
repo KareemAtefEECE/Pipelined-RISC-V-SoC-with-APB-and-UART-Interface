@@ -1,0 +1,40 @@
+
+        Address          Assembly          Comment             Machine Code
+
+         0x0           addi x1,x0,2         x1=2                00200093
+         0x4           addi x9,x0,36        x9=36               02400493
+         0x8           lw x15,21(x0)        x15=DM[21]=124      01502783
+         0xC           addi x17,x3,17       x17=17              01118893
+         0x10          xor x22,x9,x1        x22=38              0014CB33
+         0x14          slt x3,x17,x1        x3=0                0018A1B3
+         0x18          sra x4,x9,x1         x4=9                0014D233
+         0x1C          sw x17,8(x1)         DM[10]=17           0110A423
+         0x20          beq x17,x1,branch    not executed        00188863
+         0x24          sub x23,x22,x3       x22=38              403B0BB3
+         0x28          beq,x4,x4,branch     executed            00420463
+         0x2C          or x3,x3,x1          not executed        0011E1B3
+ branch: 0x30          sll x29,x22,x1       x29=152             001B1EB3     // The following 3 instruction to test data forwarding
+         0x34          srai x22,x22,1       x22=19              401B5B13     
+         0x38          slli x12,x22,2       x12=76              002B1613
+         0x40          lui x28,131072       x28=8'h20000000     20000E37    // The following 4 instructions to test the store in the FIFO_TX
+         0x44          ori x28,x28,4        x28=8'h20000004     004E6E13
+         0x48          sw x27,0(x28)        x27=9297            01BE2023
+         0x4C          sw x18, 0(x28)       x18=(123456)hex     012E2023
+         0x50          sub x5,x12,x22       x5=57               416602B3
+         0x54          jal x6,test1         x6=pc+4=58          00C0036F
+         0x58          addi x5,x5,10        not executed        00A28293
+         0x5C          sub x5,x5,x22        not executed        016282B3
+ test1:  0x60          sltiu x25,x4,-6      x25=0               FFA23C93
+         0x64          beq x25,x0,test2     executed            000C8463
+         0x68          xor x17,x17,x9       not executed        0098C8B3    // The remaining instructions to test lb,lh,lw,sb,sh,sw
+ test2:  0x6C          addi x16,x0,4076     x16=4076            FEC00813
+         0x70          slli,x19,x16,5       x19=(1FD80)hex      00581993  
+         0x74          sb x19,38(x0)        DM[38]=(80)hex      03300323
+         0x78          sh x19,39(x0)        DM[39]=(FD80)hex    033013A3
+         0x7C          sw x19,40(x0)        DM[40]=(fffffd80)   03302423
+         0x80          lb x24,40(x0)        x24=DM[40]=(80)hex  02800C03
+         0x84          lh x25,40(x0)        x25=(FD80)hex       02801C83
+         0x88          lw x26,40(x0)        x26(fffffd80)       02802D03
+         0x90          lui x2,131072        x2=8'h20000000      20000137     // The following 2 instructions to test the load from the UART FIFO and the reason they are 
+         0x94          lw x2,0(x2)          x2=8'h12345678      00012103        the last instructions to give the UART time till it already transmit data and store it in the FIFO
+         0x98          xor x22,x9,x1        x22=38              0014CB33
