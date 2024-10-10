@@ -1,13 +1,10 @@
 
 module ADDRESS_DECODER(
-    input[31:0] PADDR,PWDATA,UART_DATA,
-    input[1:0] PSTRB,
-    input PSEL,PENABLE,PWRITE,UART_READY,UART_LOAD_READY,Pstore_done,
-    output[31:0] SLVADDR,SLVWDATA,PRDATA,
-    output[1:0] SLVSTRB,
+    input[31:0] PADDR,
+    input PSEL,PENABLE,
     output reg PSEL_UART,
-    output SLVWRITE,PREADY,LOAD_READY,SLVstore_done
-	);
+    output PREADY
+  );
 
 
     // Peripherals Adresses Range
@@ -37,7 +34,7 @@ module ADDRESS_DECODER(
 
     end
 
-assign {SLVADDR,SLVWDATA,PRDATA,SLVSTRB,SLVWRITE,PREADY,LOAD_READY,SLVstore_done} = PENABLE?{PADDR,PWDATA,UART_DATA,PSTRB,PWRITE,UART_READY,UART_LOAD_READY,Pstore_done}
-                                                                       :{32'b0, 32'b0, 32'b0, 2'b0, 1'b0, 1'b0, 1'b0, 1'b0};                                                                     
+  assign PREADY = 1;
+                                                                                                                                            
 
     endmodule
