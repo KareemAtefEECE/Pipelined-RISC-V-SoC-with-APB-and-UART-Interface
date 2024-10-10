@@ -1,3 +1,6 @@
+
+
+
 module SoC_TOP_MODULE#(
     parameter WIDTH = 32    
 )(
@@ -6,14 +9,14 @@ module SoC_TOP_MODULE#(
     );
 
 
-wire[31:0] to_cpu_data,ADDR,WriteDataW,PADDR,PWDATA,PRDATA,SLVADDR,SLVWDATA,UART_DATA,rd_data,UART_Regs_out;
-wire[1:0] MemStrobeW,PSTRB,SLVSTRB;
-wire Wr_En,transEn,opcode5,store_done,store_finished,Pstore_done,SLVstore_done,trans_done,PSEL,PENABLE,PWRITE,PREADY,LOAD_READY,PSEL_UART,SLVWRITE,UART_READY,UART_LOAD_READY,rd_empty;
+wire[31:0] to_cpu_data,ADDR,WriteDataW,PADDR,PWDATA,PRDATA,UART_DATA,rd_data,UART_Regs_out;
+wire[1:0] MemStrobeW,PSTRB;
+wire Wr_En,transEn,opcode5,store_done,store_finished,Pstore_done,trans_done,PSEL,PENABLE,PWRITE,PREADY,LOAD_READY,PSEL_UART,UART_READY,UART_LOAD_READY,rd_empty;
 
 RV32I rv(CLK,RESET,to_cpu_data,ADDR,WriteDataW,MemStrobeW,Wr_En,transEn,trans_done,store_done,store_finished);
 
 APB_Master APB_Master(
-     CLK,RESET,Wr_En,transEn,1,LOAD_READY,store_done,
+     CLK,RESET,Wr_En,transEn,1,UART_LOAD_READY,store_done,
      MemStrobeW,
      ADDR,WriteDataW,PRDATA,
       to_cpu_data,
@@ -24,26 +27,23 @@ APB_Master APB_Master(
     );
 
 ADDRESS_DECODER ADDRESS_DECODER(
-     PADDR,PWDATA,rd_data,
-     PSTRB,
-     PSEL,PENABLE,PWRITE,UART_READY,UART_LOAD_READY,Pstore_done,
-     SLVADDR,SLVWDATA,PRDATA,
-     SLVSTRB,
-     PSEL_UART,SLVWRITE,PREADY,LOAD_READY,SLVstore_done
+     PADDR,
+     PSEL,PENABLE,
+     PSEL_UART,PREADY
     );
 
 UART #(.WIDTH(WIDTH)) UART(
-    .SLVADDR(SLVADDR),
-    .SLVWDATA(SLVWDATA),
-    .SLVSTRB(SLVSTRB),
+    .PADDR(PADDR),
+    .PWDATA(PWDATA),
+    .PSTRB(PSTRB),
     .PSEL_UART(PSEL_UART),
-    .SLVWRITE(SLVWRITE),
+    .PWRITE(PWRITE),
     .Rd_en(transEn),
     .RX_IN(RX_IN), 
-    .SLVstore_done(SLVstore_done),          
+    .Pstore_done(Pstore_done),          
     .clk(CLK),                  
     .rst(RESET),                 
-    .rd_data(rd_data),  
+    .PRDATA(PRDATA),  
     .rd_empty_rx(rd_empty),
     .UART_READY(UART_READY),
     .store_finished(store_finished),
