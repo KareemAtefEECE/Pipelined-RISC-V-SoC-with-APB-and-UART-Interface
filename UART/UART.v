@@ -2,12 +2,12 @@ module UART #(
     parameter WIDTH = 32    
 )(
 
-    input[WIDTH-1:0] SLVADDR,SLVWDATA,
-    input[1:0] SLVSTRB,
-    input PSEL_UART,SLVWRITE,Rd_en,RX_IN,SLVstore_done,          
+    input[WIDTH-1:0] PADDR,PWDATA,
+    input[1:0] PSTRB,
+    input PSEL_UART,PWRITE,Rd_en,RX_IN,Pstore_done,          
     input  clk,                  
     input  rst,                 
-    output [WIDTH-1:0] rd_data,  
+    output [WIDTH-1:0] PRDATA,  
     output rd_empty_rx,
 
     output  UART_READY,store_finished,
@@ -22,21 +22,22 @@ module UART #(
     reg wr_en_reg_rx,wr_en_reg_tx;    
     reg rd_en_reg;                // Registered rd_en signal to handle read enable logic  
           
-    reg data_valid_d,slvwrite_d,slvwrite_d2; 
-    reg Rd_en_prev;            // Previous state of SLVWRITE (for edge detection)
+    reg data_valid_d,pwrite_d,pwrite_d2; 
+    reg Rd_en_prev;            // Previous state of PWRITE (for edge detection)
      
 
 
 
    always @(posedge clk or posedge rst) begin
     if (rst) begin
-        slvwrite_d <= 1'b0;
+        pwrite_d <= 1'b0;
         wr_en_reg_tx <= 1'b0;
+        pwrite_d2 <= 1'b0;
     end else begin
-        slvwrite_d <= SLVWRITE;  // Store the previous state of SLVWRITE
-
-        // Detect positive edge of SLVWRITE (0 -> 1 transition)
-        if (SLVWRITE && !slvwrite_d)
+        pwrite_d <= PWRITE;  // Store the previous state of PWRITE
+        pwrite_d2 <= pwrite_d;
+        // Detect positive edge of PWRITE (0 -> 1 transition)
+        if (pwrite_d && !pwrite_d2)
             wr_en_reg_tx <= 1'b1;
         else
             wr_en_reg_tx <= 1'b0;  // Deassert after one clock cycle
@@ -49,18 +50,18 @@ end
         .rclk(clk),
         .wrst(rst),
         .rrst(rst),
-        .SLVDATA(SLVWDATA),
-        .SLVADDR(SLVADDR),
+        .SLVDATA(PWDATA),
+        .SLVADDR(PADDR),
         .TX_IN_DATA(TX_IN_DATA),   
         .wr_full(wr_full_tx),  
         .rd_empty(rd_empty_tx),  
-        .SLVWRITE(wr_en_reg_tx^SLVWRITE),
-        .SLVSTRB(SLVSTRB),
+        .SLVWRITE(wr_en_reg_tx^pwrite_d),
+        .SLVSTRB(PSTRB),
         .tx_busy(tx_busy),
         .start_tx(start_tx),
         .UART_READY(UART_READY),
         .PSEL_UART(PSEL_UART),
-        .SLVstore_done(SLVstore_done),
+        .SLVstore_done(Pstore_done),
         .store_finished(store_finished)
     );
 
@@ -81,12 +82,12 @@ end
         .wrst(rst),
         .rrst(rst),
         .wr_data(P_DATA_RX),   
-        .rd_data(rd_data),     
+        .rd_data(PRDATA),     
         .wr_full(wr_full_rx),     
         .rd_empty(rd_empty_rx),   
         .wr_en(wr_en_reg_rx),     
         .rd_en(Rd_en),         
-        .SLVSTRB(SLVSTRB),
+        .SLVSTRB(PSTRB),
         .UART_LOAD_READY(UART_LOAD_READY),
         .PSEL_UART(PSEL_UART)
     );
@@ -121,7 +122,7 @@ end
      UART_Regs reg_file(
          .clk(clk),
          .rst(rst),
-         .PADDR(SLVADDR[3:0]),
+         .PADDR(PADDR[3:0]),
          .UART_READY(UART_READY),
          .UART_LOAD_READY(UART_LOAD_READY),
          .store_finished(store_finished),
